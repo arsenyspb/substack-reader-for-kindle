@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment & Secrets
+.env
+.env.*
+*.secret
+*.pem
+*.key
+service_account.json
+
+# Project Specific Assets
+temp_assets/
+debug_assets/
+example_emails/
+*.epub
+*.log
+
+# OS & Editors
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+tmp/

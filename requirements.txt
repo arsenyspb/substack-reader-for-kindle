@@ -1,0 +1,11 @@
+imap-tools
+beautifulsoup4
+readability-lxml
+requests
+Pillow
+qrcode
+EbookLib
+python-dotenv
+lxml
+pytest
+pytest-mock

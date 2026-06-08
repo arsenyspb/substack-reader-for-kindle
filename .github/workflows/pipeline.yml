@@ -1,0 +1,71 @@
+name: Substack RKF Pipeline
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Every 30 minutes
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Which phase to run?'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - sync
+          - process
+          - both
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Validate Configuration
+        run: |
+          MISSING=()
+          [ -z "${{ secrets.GMAIL_APP_PASSWORD }}" ] && MISSING+=("GMAIL_APP_PASSWORD (Secret)")
+          [ -z "${{ secrets.WEB_APP_SECRET }}" ] && MISSING+=("WEB_APP_SECRET (Secret)")
+          [ -z "${{ secrets.GMAIL_USER }}" ] && MISSING+=("GMAIL_USER (Secret)")
+          [ -z "${{ secrets.KINDLE_EMAIL }}" ] && MISSING+=("KINDLE_EMAIL (Secret)")
+          [ -z "${{ secrets.WEB_APP_URL }}" ] && MISSING+=("WEB_APP_URL (Secret)")
+          
+          if [ ${#MISSING[@]} -ne 0 ]; then
+            echo "::error::Missing required configuration: ${MISSING[*]}"
+            echo "Please run 'scripts/setup_github.sh' or add them manually in Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Sync Phase
+        if: github.event.inputs.phase == 'sync' || github.event.inputs.phase == 'both' || github.event_name == 'schedule'
+        run: python src/main.py --sync
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          KINDLE_EMAIL: ${{ secrets.KINDLE_EMAIL }}
+          WEB_APP_URL: ${{ secrets.WEB_APP_URL }}
+          WEB_APP_SECRET: ${{ secrets.WEB_APP_SECRET }}
+          ALLOWLISTED_SENDERS: ${{ secrets.ALLOWLISTED_SENDERS }}
+
+      - name: Run Process Phase
+        if: github.event.inputs.phase == 'process' || github.event.inputs.phase == 'both' || github.event_name == 'schedule'
+        run: python src/main.py --process
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          KINDLE_EMAIL: ${{ secrets.KINDLE_EMAIL }}
+          WEB_APP_URL: ${{ secrets.WEB_APP_URL }}
+          WEB_APP_SECRET: ${{ secrets.WEB_APP_SECRET }}
+          ALLOWLISTED_SENDERS: ${{ secrets.ALLOWLISTED_SENDERS }}

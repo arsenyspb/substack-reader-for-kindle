@@ -57,7 +57,7 @@ function authenticate(request) {
 function doGet(e) {
   var auth = authenticate(e);
   if (!auth.success) {
-    return ContentService.createTextOutput(auth.error).setMimeType(ContentService.MimeType.TEXT).setStatusCode(auth.status);
+    return ContentService.createTextOutput(auth.error).setMimeType(ContentService.MimeType.TEXT);
   }
 
   var action = e.parameter.action;
@@ -84,7 +84,7 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(results)).setMimeType(ContentService.MimeType.JSON);
   }
 
-  return ContentService.createTextOutput("Invalid Action").setMimeType(ContentService.MimeType.TEXT).setStatusCode(400);
+  return ContentService.createTextOutput("Invalid Action").setMimeType(ContentService.MimeType.TEXT);
 }
 
 /**
@@ -93,7 +93,7 @@ function doGet(e) {
 function doPost(e) {
   var auth = authenticate(e);
   if (!auth.success) {
-    return ContentService.createTextOutput(auth.error).setMimeType(ContentService.MimeType.TEXT).setStatusCode(auth.status);
+    return ContentService.createTextOutput(auth.error).setMimeType(ContentService.MimeType.TEXT);
   }
 
   var data = JSON.parse(e.postData.contents);
@@ -122,7 +122,7 @@ function doPost(e) {
     // Data search starts from Row 3
     var numRows = sheet.getLastRow() - 2;
     if (numRows < 1) {
-       return ContentService.createTextOutput("No data found").setMimeType(ContentService.MimeType.TEXT).setStatusCode(404);
+       return ContentService.createTextOutput("No data found").setMimeType(ContentService.MimeType.TEXT);
     }
     
     var values = sheet.getRange(3, msgIdCol, numRows, 1).getValues();
@@ -133,8 +133,8 @@ function doPost(e) {
         return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
       }
     }
-    return ContentService.createTextOutput("Message-ID not found").setMimeType(ContentService.MimeType.TEXT).setStatusCode(404);
+    return ContentService.createTextOutput("Message-ID not found").setMimeType(ContentService.MimeType.TEXT);
   }
 
-  return ContentService.createTextOutput("Invalid Action").setMimeType(ContentService.MimeType.TEXT).setStatusCode(400);
+  return ContentService.createTextOutput("Invalid Action").setMimeType(ContentService.MimeType.TEXT);
 }

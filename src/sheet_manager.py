@@ -14,13 +14,18 @@ class SheetManager:
 
     def _handle_response(self, response):
         """Checks for errors and version mismatches in the response."""
-        if response.status_code == 400 and "VERSION_MISMATCH" in response.text:
+        response.raise_for_status()
+        text = response.text
+        if "VERSION_MISMATCH" in text:
             raise RuntimeError(
                 f"API Version Mismatch! This code expects v{self.API_VERSION}, "
                 "but your Google Apps Script is outdated. Please update templates/Code.gs "
                 "in your Google Sheet project."
             )
-        response.raise_for_status()
+        if "Unauthorized:" in text:
+            raise PermissionError(text)
+        if text in ("Invalid Action", "Message-ID not found", "No data found"):
+            raise ValueError(text)
         return response
 
     def append_email(self, message_id: str, date: str, sender: str, subject: str):
@@ -29,7 +34,7 @@ class SheetManager:
             "action": "append",
             "secret": self.secret,
             "version": self.API_VERSION,
-            "Status": "PENDING",
+            "Status": "APPROVED" if config.AUTO_APPROVE else "PENDING",
             "Subject": subject,
             "Sender": sender,
             "Date": date,

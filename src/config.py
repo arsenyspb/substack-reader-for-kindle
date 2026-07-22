@@ -28,6 +28,9 @@ class Config:
 
     # Filtering Configuration
     ALLOWLISTED_SENDERS: str = os.getenv("ALLOWLISTED_SENDERS", "")
+    
+    # Auto-approve new items without manual triage (Not Recommended)
+    AUTO_APPROVE: bool = os.getenv("AUTO_APPROVE", "false").lower() == "true"
 
     def validate(self):
         """Validates that all required environment variables are set."""

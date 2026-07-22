@@ -14,6 +14,11 @@ on:
           - sync
           - process
           - both
+      auto_approve:
+        description: 'Auto-approve synced items? (Bypass manual triage)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   run-pipeline:
@@ -58,6 +63,7 @@ jobs:
           WEB_APP_URL: ${{ secrets.WEB_APP_URL }}
           WEB_APP_SECRET: ${{ secrets.WEB_APP_SECRET }}
           ALLOWLISTED_SENDERS: ${{ secrets.ALLOWLISTED_SENDERS }}
+          AUTO_APPROVE: ${{ github.event.inputs.auto_approve == 'true' || secrets.AUTO_APPROVE == 'true' }}
 
       - name: Run Process Phase
         if: github.event.inputs.phase == 'process' || github.event.inputs.phase == 'both' || github.event_name == 'schedule'
@@ -69,3 +75,4 @@ jobs:
           WEB_APP_URL: ${{ secrets.WEB_APP_URL }}
           WEB_APP_SECRET: ${{ secrets.WEB_APP_SECRET }}
           ALLOWLISTED_SENDERS: ${{ secrets.ALLOWLISTED_SENDERS }}
+          AUTO_APPROVE: ${{ github.event.inputs.auto_approve == 'true' || secrets.AUTO_APPROVE == 'true' }}

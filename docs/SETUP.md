@@ -49,5 +49,6 @@ This guide will walk you through the three main steps required to get your own S
     *   `WEB_APP_URL`: The URL from Step 2.
     *   `WEB_APP_SECRET`: The secret string from Step 2.
     *   `ALLOWLISTED_SENDERS` (Optional): Comma-separated list of emails to process.
+    *   `AUTO_APPROVE` (Optional): Set to `true` to bypass the manual Triage phase. Emails will be automatically marked as `APPROVED` upon sync. *Note: This is not recommended as it bypasses the spam protection layer of the triage sheet, but the items will still be visible in the Google Sheet.*
 
     > **Note:** You must add your `GMAIL_USER` email address to your **Approved Personal Document E-mail List** in your Amazon account settings. [Configure it here](https://www.amazon.com/hz/mycd/preferences/myx#/home/settings/payment).

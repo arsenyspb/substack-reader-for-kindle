@@ -11,6 +11,7 @@ class SheetManager:
     def __init__(self):
         self.url = config.WEB_APP_URL
         self.secret = config.WEB_APP_SECRET
+        self.session = requests.Session()
 
     def _handle_response(self, response):
         """Checks for errors and version mismatches in the response."""
@@ -40,7 +41,7 @@ class SheetManager:
             "Date": date,
             "Message-ID": message_id
         }
-        response = requests.post(self.url, json=payload)
+        response = self.session.post(self.url, json=payload)
         self._handle_response(response)
 
     def get_pending_actions(self) -> List[Dict[str, Any]]:
@@ -50,7 +51,7 @@ class SheetManager:
             "secret": self.secret,
             "version": self.API_VERSION
         }
-        response = requests.get(self.url, params=params)
+        response = self.session.get(self.url, params=params)
         self._handle_response(response)
         return response.json()
 
@@ -63,5 +64,5 @@ class SheetManager:
             "Message-ID": message_id,
             "Status": new_status
         }
-        response = requests.post(self.url, json=payload)
+        response = self.session.post(self.url, json=payload)
         self._handle_response(response)

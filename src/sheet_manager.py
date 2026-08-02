@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from typing import List, Dict, Any
 from config import config
 
@@ -11,7 +12,6 @@ class SheetManager:
     def __init__(self):
         self.url = config.WEB_APP_URL
         self.secret = config.WEB_APP_SECRET
-        self.session = requests.Session()
 
     def _handle_response(self, response):
         """Checks for errors and version mismatches in the response."""
@@ -29,6 +29,26 @@ class SheetManager:
             raise ValueError(text)
         return response
 
+    def _make_request(self, method: str, **kwargs):
+        """Makes a request with retries for transient 404 errors from Google's redirect."""
+        for attempt in range(3):
+            try:
+                if method == 'GET':
+                    response = requests.get(self.url, **kwargs)
+                elif method == 'POST':
+                    response = requests.post(self.url, allow_redirects=True, **kwargs)
+                else:
+                    raise ValueError(f"Unsupported method: {method}")
+                
+                # Check if it's a 404 before passing to standard handler
+                response.raise_for_status()
+                return response
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code == 404 and attempt < 2:
+                    time.sleep(2)
+                    continue
+                raise
+
     def append_email(self, message_id: str, date: str, sender: str, subject: str):
         """Appends a new email entry to the sheet via the Web App."""
         payload = {
@@ -41,7 +61,7 @@ class SheetManager:
             "Date": date,
             "Message-ID": message_id
         }
-        response = self.session.post(self.url, json=payload)
+        response = self._make_request('POST', json=payload)
         self._handle_response(response)
 
     def get_pending_actions(self) -> List[Dict[str, Any]]:
@@ -51,7 +71,7 @@ class SheetManager:
             "secret": self.secret,
             "version": self.API_VERSION
         }
-        response = self.session.get(self.url, params=params)
+        response = self._make_request('GET', params=params)
         self._handle_response(response)
         return response.json()
 
@@ -64,5 +84,5 @@ class SheetManager:
             "Message-ID": message_id,
             "Status": new_status
         }
-        response = self.session.post(self.url, json=payload)
+        response = self._make_request('POST', json=payload)
         self._handle_response(response)

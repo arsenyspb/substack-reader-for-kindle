@@ -30,22 +30,35 @@ class SheetManager:
         return response
 
     def _make_request(self, method: str, **kwargs):
-        """Makes a request with retries for transient 404 errors from Google's redirect."""
+        """Makes a request with retries, handling Google Apps Script redirects manually."""
+        headers = kwargs.pop('headers', {})
+        if 'User-Agent' not in headers:
+            headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        kwargs['headers'] = headers
+
         for attempt in range(3):
             try:
+                # First request to the Web App URL (do not follow redirects automatically)
                 if method == 'GET':
-                    response = requests.get(self.url, **kwargs)
+                    response = requests.get(self.url, allow_redirects=False, **kwargs)
                 elif method == 'POST':
-                    response = requests.post(self.url, allow_redirects=True, **kwargs)
+                    response = requests.post(self.url, allow_redirects=False, **kwargs)
                 else:
                     raise ValueError(f"Unsupported method: {method}")
+
+                # Google Apps Script Web Apps always redirect on success
+                if response.status_code in (302, 303) and 'Location' in response.headers:
+                    redirect_url = response.headers['Location']
+                    # Second hop: GET request to the redirect URL with NO cookies and no payload
+                    # Apps Script returns the actual result at this redirect URL via GET
+                    response = requests.get(redirect_url, headers=headers)
                 
                 # Check if it's a 404 before passing to standard handler
                 response.raise_for_status()
                 return response
             except requests.exceptions.HTTPError as e:
                 if e.response is not None and e.response.status_code == 404 and attempt < 2:
-                    time.sleep(2)
+                    time.sleep(2 ** attempt)  # Exponential backoff
                     continue
                 raise
 

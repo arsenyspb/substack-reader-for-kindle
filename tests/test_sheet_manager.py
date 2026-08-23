@@ -72,20 +72,20 @@ def test_make_request_post_redirect_success(mock_post, mock_get):
 @patch('src.sheet_manager.requests.get')
 @patch('src.sheet_manager.time.sleep')
 def test_make_request_404_retries(mock_sleep, mock_get):
-    """Test that transient 404s are retried with exponential backoff."""
-    # Simulate 404, 404, then 200 OK
+    """Test that transient 404s and network errors are retried with exponential backoff."""
+    # Simulate 404, Timeout, then 200 OK
     mock_404 = MagicMock()
     mock_404.status_code = 404
-    
-    # We must raise an HTTPError for 404 in requests normally when raise_for_status() is called,
-    # but the retry logic catches it.
     mock_404.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Error", response=mock_404)
     
     mock_200 = MagicMock()
     mock_200.status_code = 200
     mock_200.text = "Success"
     
-    mock_get.side_effect = [mock_404, mock_404, mock_200]
+    # Simulate Timeout on second try
+    timeout_err = requests.exceptions.Timeout("Connection timed out")
+    
+    mock_get.side_effect = [mock_404, timeout_err, mock_200]
     
     manager = SheetManager()
     response = manager._make_request('GET')

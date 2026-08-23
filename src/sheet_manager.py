@@ -36,7 +36,10 @@ class SheetManager:
             headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         kwargs['headers'] = headers
 
-        for attempt in range(3):
+        if 'timeout' not in kwargs:
+            kwargs['timeout'] = 30
+
+        for attempt in range(5):
             try:
                 # First request to the Web App URL (do not follow redirects automatically)
                 if method == 'GET':
@@ -51,13 +54,16 @@ class SheetManager:
                     redirect_url = response.headers['Location']
                     # Second hop: GET request to the redirect URL with NO cookies and no payload
                     # Apps Script returns the actual result at this redirect URL via GET
-                    response = requests.get(redirect_url, headers=headers)
+                    response = requests.get(redirect_url, headers=headers, timeout=kwargs.get('timeout', 30))
                 
                 # Check if it's a 404 before passing to standard handler
                 response.raise_for_status()
                 return response
-            except requests.exceptions.HTTPError as e:
-                if e.response is not None and e.response.status_code == 404 and attempt < 2:
+            except requests.exceptions.RequestException as e:
+                is_retryable_status = isinstance(e, requests.exceptions.HTTPError) and e.response is not None and e.response.status_code in (404, 500, 502, 503, 504)
+                is_network_error = isinstance(e, (requests.exceptions.Timeout, requests.exceptions.ConnectionError))
+                
+                if (is_retryable_status or is_network_error) and attempt < 4:
                     time.sleep(2 ** attempt)  # Exponential backoff
                     continue
                 raise

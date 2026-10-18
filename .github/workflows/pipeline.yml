@@ -20,6 +20,10 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
@@ -47,6 +51,14 @@ jobs:
             echo "Please run 'scripts/setup_github.sh' or add them manually in Settings > Secrets and variables > Actions"
             exit 1
           fi
+
+      - name: Keep Scheduled Workflow Alive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GitHub disables scheduled workflows in public repositories after 60 days without commits.
+          # Re-enabling the workflow via the GitHub API resets the inactivity timer without polluting git history.
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/pipeline.yml/enable"
 
       - name: Install Dependencies
         run: |

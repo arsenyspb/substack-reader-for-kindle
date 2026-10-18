@@ -50,6 +50,9 @@ gh variable delete KINDLE_EMAIL &> /dev/null || true
 gh variable delete WEB_APP_URL &> /dev/null || true
 gh variable delete ALLOWLISTED_SENDERS &> /dev/null || true
 
+echo "Ensuring scheduled workflow is enabled..."
+gh api -X PUT "repos/{owner}/{repo}/actions/workflows/pipeline.yml/enable" &> /dev/null || true
+
 echo "------------------------------------------------"
 echo "Setup Complete! You can now run your first Sync."
 echo "------------------------------------------------"

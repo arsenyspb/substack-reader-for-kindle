@@ -51,4 +51,6 @@ This guide will walk you through the three main steps required to get your own S
     *   `ALLOWLISTED_SENDERS` (Optional): Comma-separated list of emails to process.
     *   `AUTO_APPROVE` (Optional): Set to `true` to bypass the manual Triage phase. Emails will be automatically marked as `APPROVED` upon sync. *Note: This is not recommended as it bypasses the spam protection layer of the triage sheet, but the items will still be visible in the Google Sheet.*
 
+    > **Note:** On newly forked repositories, GitHub disables workflows by default. Go to the **Actions** tab in your fork and click **I understand my workflows, go ahead and enable them** (and ensure **Substack RKF Pipeline** is enabled). Once running, the workflow automatically keeps itself active across GitHub's 60-day repository inactivity window.
+
     > **Note:** You must add your `GMAIL_USER` email address to your **Approved Personal Document E-mail List** in your Amazon account settings. [Configure it here](https://www.amazon.com/hz/mycd/preferences/myx#/home/settings/payment).
